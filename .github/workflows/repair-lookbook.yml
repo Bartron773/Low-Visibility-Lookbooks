@@ -32,7 +32,6 @@ jobs:
 
           html = re.sub(r'<title>.*?</title>', f'<title>{title}</title>', html, count=1, flags=re.S)
 
-          # Remove any previously inserted metadata that this workflow owns.
           patterns = [
               r'\s*<meta\s+name="description"[^>]*>',
               r'\s*<meta\s+name="author"[^>]*>',
@@ -46,43 +45,43 @@ jobs:
           for pattern in patterns:
               html = re.sub(pattern, '', html, flags=re.I)
 
-          metadata = f'''
-  <meta name="description" content="{description}">
-  <meta name="author" content="Simple Minds Studios">
-  <meta name="theme-color" content="#0a0a0a">
-  <meta name="color-scheme" content="dark">
-  <meta name="format-detection" content="telephone=no">
-  <link rel="canonical" href="{canonical}">
-
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="LOW VISIBILITY™">
-  <meta property="og:title" content="{title}">
-  <meta property="og:description" content="{description}">
-  <meta property="og:url" content="{canonical}">
-  <meta property="og:image" content="{image_url}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="LOW VISIBILITY SS27 Lookbook Collection">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{title}">
-  <meta name="twitter:description" content="{description}">
-  <meta name="twitter:image" content="{image_url}">
-'''
+          metadata_lines = [
+              f'<meta name="description" content="{description}">',
+              '<meta name="author" content="Simple Minds Studios">',
+              '<meta name="theme-color" content="#0a0a0a">',
+              '<meta name="color-scheme" content="dark">',
+              '<meta name="format-detection" content="telephone=no">',
+              f'<link rel="canonical" href="{canonical}">',
+              '',
+              '<meta property="og:type" content="website">',
+              '<meta property="og:site_name" content="LOW VISIBILITY™">',
+              f'<meta property="og:title" content="{title}">',
+              f'<meta property="og:description" content="{description}">',
+              f'<meta property="og:url" content="{canonical}">',
+              f'<meta property="og:image" content="{image_url}">',
+              '<meta property="og:image:width" content="1200">',
+              '<meta property="og:image:height" content="630">',
+              '<meta property="og:image:alt" content="LOW VISIBILITY SS27 Lookbook Collection">',
+              '',
+              '<meta name="twitter:card" content="summary_large_image">',
+              f'<meta name="twitter:title" content="{title}">',
+              f'<meta name="twitter:description" content="{description}">',
+              f'<meta name="twitter:image" content="{image_url}">',
+          ]
+          metadata = '\n  ' + '\n  '.join(metadata_lines) + '\n'
 
           viewport_match = re.search(r'(<meta\s+name="viewport"[^>]*>)', html, flags=re.I)
           if not viewport_match:
               raise SystemExit('Viewport meta tag not found; refusing unsafe edit.')
+
           html = html[:viewport_match.end()] + metadata + html[viewport_match.end():]
           index.write_text(html, encoding='utf-8')
 
-          # Create a valid 1200x630 RGB PNG using only Python's standard library.
           width, height = 1200, 630
           rows = []
           for y in range(height):
               row = bytearray([0])
               for x in range(width):
-                  # Black editorial field with magenta horizon and subtle diagonal glow.
                   glow = max(0, 90 - abs(y - 430) // 2)
                   diagonal = max(0, 50 - abs((x - y) - 260) // 8)
                   r = min(255, 10 + glow * 2 + diagonal)
